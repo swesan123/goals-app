@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/goal.dart';
 
 void main() {
   runApp(GoalTrackerApp());
@@ -21,19 +22,19 @@ class GoalTrackerHome extends StatefulWidget {
 }
 
 class _GoalTrackerHomeState extends State<GoalTrackerHome> {
-  final List<Map<String, String>> _goals = []; // List to store goals
+  final List<Goal> _goals = []; // List of all goals
   final TextEditingController _goalController = TextEditingController();
   String _selectedCategory = 'Daily'; // Default category
 
   void _addGoal() {
     if (_goalController.text.isNotEmpty) {
       setState(() {
-        _goals.add({
-          'title': _goalController.text,
-          'category': _selectedCategory,
-        });
+        _goals.add(Goal(
+          title: _goalController.text,
+          category: _selectedCategory,
+        ));
       });
-      _goalController.clear(); // Clear the input field
+      _goalController.clear();
     }
   }
 
@@ -80,6 +81,7 @@ class _GoalTrackerHomeState extends State<GoalTrackerHome> {
                 _buildCategorySection('Daily'),
                 _buildCategorySection('Short-term'),
                 _buildCategorySection('Long-term'),
+                _buildCompletedSection(),
               ],
             ),
           ),
@@ -89,7 +91,10 @@ class _GoalTrackerHomeState extends State<GoalTrackerHome> {
   }
 
   Widget _buildCategorySection(String category) {
-    final categoryGoals = _goals.where((goal) => goal['category'] == category).toList();
+    final categoryGoals = _goals
+        .where((goal) => goal.category == category && !goal.completed)
+        .toList();
+
     if (categoryGoals.isEmpty) return SizedBox();
 
     return Column(
@@ -102,8 +107,42 @@ class _GoalTrackerHomeState extends State<GoalTrackerHome> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-        ...categoryGoals.map((goal) => ListTile(title: Text(goal['title']!))),
+        ...categoryGoals.map((goal) => _buildGoalTile(goal)).toList(),
       ],
+    );
+  }
+
+  Widget _buildCompletedSection() {
+    final completedGoals = _goals.where((goal) => goal.completed).toList();
+
+    if (completedGoals.isEmpty) return SizedBox();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            'Completed',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+        ...completedGoals.map((goal) => _buildGoalTile(goal)).toList(),
+      ],
+    );
+  }
+
+  Widget _buildGoalTile(Goal goal) {
+    return ListTile(
+      title: Text(goal.title),
+      leading: Checkbox(
+        value: goal.completed,
+        onChanged: (value) {
+          setState(() {
+            goal.completed = value!;
+          });
+        },
+      ),
     );
   }
 }
