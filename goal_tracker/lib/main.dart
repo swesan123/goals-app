@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/goal.dart';
 
 void main() {
@@ -53,6 +54,7 @@ class _GoalTrackerHomeState extends State<GoalTrackerHome> {
                   decoration: InputDecoration(labelText: 'Enter your goal'),
                 ),
                 SizedBox(height: 10),
+                Text('Select Category:'),
                 DropdownButton<String>(
                   value: _selectedCategory,
                   onChanged: (value) {
@@ -91,9 +93,7 @@ class _GoalTrackerHomeState extends State<GoalTrackerHome> {
   }
 
   Widget _buildCategorySection(String category) {
-    final categoryGoals = _goals
-        .where((goal) => goal.category == category && !goal.completed)
-        .toList();
+    final categoryGoals = _goals.where((goal) => goal.category == category && !goal.completed).toList();
 
     if (categoryGoals.isEmpty) return SizedBox();
 
@@ -112,6 +112,25 @@ class _GoalTrackerHomeState extends State<GoalTrackerHome> {
     );
   }
 
+  Widget _buildGoalTile(Goal goal) {
+    return ListTile(
+      title: Text(goal.title),
+      trailing: Checkbox(
+        value: goal.completed,
+        onChanged: (bool? value) {
+          setState(() {
+            goal.completed = value!;
+            if (goal.completed) {
+              goal.completedDate = DateTime.now();
+            } else {
+              goal.completedDate = null;
+            }
+          });
+        },
+      ),
+    );
+  }
+
   Widget _buildCompletedSection() {
     final completedGoals = _goals.where((goal) => goal.completed).toList();
 
@@ -127,22 +146,11 @@ class _GoalTrackerHomeState extends State<GoalTrackerHome> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-        ...completedGoals.map((goal) => _buildGoalTile(goal)).toList(),
+        ...completedGoals.map((goal) => ListTile(
+          title: Text(goal.title),
+          subtitle: Text('Completed on ${DateFormat('dd/MM/yy').format(goal.completedDate!)}'),
+        )).toList(),
       ],
-    );
-  }
-
-  Widget _buildGoalTile(Goal goal) {
-    return ListTile(
-      title: Text(goal.title),
-      leading: Checkbox(
-        value: goal.completed,
-        onChanged: (value) {
-          setState(() {
-            goal.completed = value!;
-          });
-        },
-      ),
     );
   }
 }
